@@ -1,41 +1,55 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
-from os import listdir
-from os.path import isfile, join
+import os 
 from enum import Enum
 
 class BirdSpecies(Enum):
-    SPECIES_1 = "talitintti"
-    SPECIES_2 = "punatulkku"
-    EMPTY = "empty"
+    SPECIES_1 = "Talitintti"
+    SPECIES_2 = "Punatulkku"
+    EMPTY = "Empty"
 
 class ImageCropper:
     def __init__(self, root):
         self.root = root
         self.root.title("Bird Cropper v9001")
-        
+        self.root.geometry("1000x1000")
         # --- 1. Control Panel (Top) ---
         control_frame = tk.Frame(root, bg="#f0f0f0", pady=10)
-        control_frame.pack(fill="x")
+        control_frame.pack(fill="both")
 
         # Radio Button Variable
         self.ext_var = tk.StringVar(value=BirdSpecies.SPECIES_1.value)
 
         # UI Elements
-        tk.Label(control_frame, text="Format:", bg="#f0f0f0").pack(side="left", padx=10)
+        tk.Label(control_frame, text="Species:", bg="#f0f0f0").pack(side="left", padx=10)
         
         # Luo radiobuttonit lintulajeille
         for v in BirdSpecies:
+            if v.value == BirdSpecies.EMPTY.value:
+                continue
             tk.Radiobutton(control_frame, text=v.value, variable=self.ext_var, 
                        value=v.value, bg="#f0f0f0").pack(side="left")
-            
-        tk.Button(control_frame, text="Select bird image folder", 
-                  command=self.load_image).pack(side="left", padx=20)
+
+        # Original photos folder button    
+        self.btn_select_image_folder = tk.Button(control_frame, text="Select bird image folder", 
+                  command=self.load_image)
+        self.btn_select_image_folder.pack(side="left", padx=20)
         
+
+        tk.Button(control_frame, text="Delete photo", command=self.delete_image).pack(side="left", padx=20)
+
+        # Save button
         self.btn_save = tk.Button(control_frame, text="Save Selection", 
                                   command=self.save_crop, state="disabled", bg="lightblue")
         self.btn_save.pack(side="left")
+
+        self.btn_next = tk.Button(control_frame, text="Next image", command=self.change_to_next)
+        self.btn_next.pack(side="left", padx=20)
+
+
+
+
 
         # --- 2. Image Canvas (Main Area) ---
         self.canvas = tk.Canvas(root, cursor="cross")
@@ -54,24 +68,31 @@ class ImageCropper:
         self.cur_y = 0
         self.image_opened = None  # The PIL Image object
         self.tk_image = None      # The Tkinter display object
+        self.current_img_name = None
         self.img_dirpath = None
-        self.save_dirpath = None
+        self.handled_dir = None
+        self.save_root_dirpath = None
 
     def load_image(self):
         # Valitaan lintukuvien kansio
-        self.img_dirpath = filedialog.askdirectory()
         if self.img_dirpath is None:
-            return
+            self.img_dirpath = filedialog.askdirectory()
+            self.btn_select_image_folder.config(state="disabled")
+
+        # Luodaan kansio käsitellyille kuville
+        self.handled_dir = self.img_dirpath + "/" + "handled"
+        if not os.path.isdir(self.handled_dir):
+            os.mkdir(self.handled_dir)
 
         # Lukee tiedostot kansiosta
-        folder_contents = [f for f in listdir(self.img_dirpath) if isfile(join(self.img_dirpath, f))]
+        folder_contents = [f for f in os.listdir(self.img_dirpath) if os.path.isfile(os.path.join(self.img_dirpath, f))]
 
 
         for i in folder_contents:
             # Load image with PIL
             if self.image_opened is None:
                 try:
-
+                    
                     image_path = self.img_dirpath + "/" + i
 
                     # Tarkastetaan onko tiedosto kuva ja aukaistaan se sen jälkeen. Heittää erroria jos ei ole kuva.
@@ -80,14 +101,15 @@ class ImageCropper:
 
                     # Verify muuttaa kuvan tyypiksi None, joten se täytyy avata uusiksi jotta sen saa takaisin kuvaksi.
                     self.image_opened = Image.open(image_path)
-
+                    
+                    print(f"Tiedosto: {os.path.basename(self.image_opened.filename)}")
                     # Convert to Tkinter compatible image
                     self.tk_image = ImageTk.PhotoImage(self.image_opened)
 
                     # Resize window to fit image (optional limitation)
                     w, h = self.image_opened.size
-                    print(self.image_opened.size)
-                    self.root.geometry(f"{min(w, 1200)}x{min(h+50, 900)}")
+                    
+                    #self.root.geometry(f"{min(w, 1200)}x{min(h+50, 900)}")
                     
                     # Draw image on canvas
                     self.canvas.config(width=w, height=h)
@@ -96,7 +118,7 @@ class ImageCropper:
 
                 except Exception as e:
                     print(e)
-                    pass
+                    continue
         
 
 
@@ -126,8 +148,8 @@ class ImageCropper:
         if self.image_opened is None:
             return
         
-        if self.save_dirpath is None:
-            self.save_dirpath = filedialog.askdirectory(title="Select save directory")
+        if self.save_root_dirpath is None:
+            self.save_root_dirpath = filedialog.askdirectory(title="Select save directory")
 
         
         # Calculate coordinates ensuring no negative widths
@@ -141,29 +163,67 @@ class ImageCropper:
             messagebox.showwarning("Warning", "Selection too small!")
             return
 
-        print(f"left: {left}, right: {right}, top: {top}, bottom: {bottom}")
         # Crop using the original PIL image
         crop = self.image_opened.crop((left, top, right, bottom))
         
         # Save file
         ext = self.ext_var.get()
+        
+        save_dir = self.save_root_dirpath + "/" + ext.lower()
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
 
-        match self.ext_var.get():
-            case ".jpg":
-                save_path = os.getdir
-        save_path = filedialog.asksaveasfilename(defaultextension=ext, 
-                                                 filetypes=[(ext.upper(), f"*{ext}")])
-        if save_path:
-            crop.save(save_path)
-            messagebox.showinfo("Success", f"Saved to {save_path}")
+        if save_dir:
+            crop.save(self.get_unique_filename(save_dir + "/" + os.path.basename(self.image_opened.filename)))
+            messagebox.showinfo("Success", f"Saved to {save_dir}")
 
+    
     # Tyhjän kuvan tallennus napilla
     def save_empty(self):
         if self.image_opened is None:
             return
         
-        if self.save_dirpath is None:
-            self.save_dirpath = filedialog.askdirectory(title="Select save directory")
+        if self.save_root_dirpath is None:
+            self.save_root_dirpath = filedialog.askdirectory(title="Select save directory")
+
+        save_dir = self.save_root_dirpath + "/" + BirdSpecies.EMPTY.value.lower()
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
+        
+        self.image_opened.save(save_dir + "/" + os.path.basename(self.image_opened.filename))
+        os.replace(self.image_opened.filename, self.get_unique_filename(self.handled_dir + "/" + os.path.basename(self.image_opened.filename)))
+        self.image_opened = None
+        self.load_image()
+
+    def delete_image(self):
+        if self.image_opened is None:
+            return
+        
+        os.remove(self.image_opened.filename)
+        self.image_opened = None
+        self.load_image()
+
+    def change_to_next(self):
+        os.replace(self.image_opened.filename, self.get_unique_filename(self.handled_dir + "/" + os.path.basename(self.image_opened.filename)))
+        self.image_opened = None
+        self.load_image()
+
+    def get_unique_filename(self, filename):
+        if not os.path.exists(filename):
+            return filename
+        
+        base_name, extension = os.path.splitext(filename)
+        counter = 1
+
+        while True:
+            # Format the counter with 2 digits (01, 02, ... 10)
+            new_filename = f"{base_name}_{counter:02d}{extension}"
+            
+            if not os.path.exists(new_filename):
+                return new_filename
+                
+            counter += 1
+        
 
 # Run the App
 if __name__ == "__main__":
