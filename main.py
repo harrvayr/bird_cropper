@@ -10,6 +10,7 @@ class ImageCropper:
         self.root = root
         self.root.title("Bird Cropper v9001")
         self.root.geometry("1000x1000")
+        self.radiobuttons_list = []
         
         # Control panel
         control_frame = tk.Frame(root, bg="#f0f0f0", pady=10)
@@ -26,8 +27,13 @@ class ImageCropper:
         for v in BirdSpecies:
             if v.value == BirdSpecies.EMPTY.value:
                 continue
-            tk.Radiobutton(control_frame, text=v.value, variable=self.ext_var, 
-                       value=v.value, bg="#f0f0f0").pack(side="left")
+            radiobtn = tk.Radiobutton(control_frame, text=v.value, variable=self.ext_var, value=v.value, bg='#f0f0f0') 
+            radiobtn.pack(side='left')
+            self.radiobuttons_list.append(radiobtn)
+      
+            
+            # self.radiobtn_bird_ = tk.Radiobutton(control_frame, text=v.value, variable=self.ext_var, 
+            #            value=v.value, bg="#f0f0f0").pack(side="left")
 
         # Original photos folder button    
         self.btn_select_image_folder = tk.Button(control_frame, text="Select bird image folder", 
@@ -38,13 +44,16 @@ class ImageCropper:
         # Delete image button
         tk.Button(control_frame, text="Delete image", command=self.delete_image).pack(side="left", padx=20)
 
+        # Save empty
+        self.btn_save_empty = tk.Button(control_frame, text="Save empty", command=self.save_empty, state="disabled")
+        self.btn_save_empty.pack(side="left", padx=10)
+
         # Original image save button
         self.btn_save_original = tk.Button(control_frame, text="Save original", command=self.save_original, state="disabled")
-        self.btn_save_original.pack(side="left")
+        self.btn_save_original.pack(side="left", padx=10)
 
         # Crop save button
-        self.btn_save = tk.Button(control_frame, text="Save Selection", 
-                                  command=self.save_crop, state="disabled", bg="lightblue")
+        self.btn_save = tk.Button(control_frame, text="Save Selection", command=self.save_crop, state="disabled", bg="lightblue")
         self.btn_save.pack(side="left")
         
         # Next image button
@@ -52,7 +61,13 @@ class ImageCropper:
         self.btn_next.pack(side="left", padx=20)
 
 
+        # Keyboard button binds to make the sorting a bit faster
+        for x in range(len(self.radiobuttons_list)):
+            self.root.bind(f"{x+1}", lambda event, b=self.radiobuttons_list[x]: b.invoke())
 
+        self.root.bind("<Shift_L>", lambda event: self.btn_next.invoke())
+        self.root.bind("<space>", lambda event: self.btn_save.invoke())
+        self.root.bind("e", lambda event: self.btn_save_empty.invoke())
 
 
         # Main canvas
@@ -76,6 +91,7 @@ class ImageCropper:
         self.img_dirpath = None
         self.handled_dir = None
         self.save_root_dirpath = None
+
 
     def load_image(self):
         # Select og image directory if not selected already
@@ -119,6 +135,8 @@ class ImageCropper:
                     self.canvas.config(width=w, height=h)
                     self.canvas.create_image(0, 0, image=self.tk_image, anchor="nw")
                     self.btn_save.config(state="normal")
+                    self.btn_save_original.config(state="normal")
+                    self.btn_save_empty.config(state="normal")
 
                 except Exception as e:
                     print(e)
