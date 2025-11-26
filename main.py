@@ -42,7 +42,8 @@ class ImageCropper:
         
 
         # Delete image button
-        tk.Button(control_frame, text="Delete image", command=self.delete_image).pack(side="left", padx=20)
+        self.btn_delete_image = tk.Button(control_frame, text="Delete image", command=self.delete_image, state="disabled")
+        self.btn_delete_image.pack(side="left", padx=20)
 
         # Save empty
         self.btn_save_empty = tk.Button(control_frame, text="Save empty", command=self.save_empty, state="disabled")
@@ -68,6 +69,7 @@ class ImageCropper:
         self.root.bind("<Shift_L>", lambda event: self.btn_next.invoke())
         self.root.bind("<space>", lambda event: self.btn_save.invoke())
         self.root.bind("e", lambda event: self.btn_save_empty.invoke())
+        self.root.bind("q", lambda event: self.btn_delete_image.invoke())
 
 
         # Main canvas
@@ -134,9 +136,12 @@ class ImageCropper:
                     w, h = self.image_opened.size
                     self.canvas.config(width=w, height=h)
                     self.canvas.create_image(0, 0, image=self.tk_image, anchor="nw")
+
+                    # Enable buttons
                     self.btn_save.config(state="normal")
                     self.btn_save_original.config(state="normal")
                     self.btn_save_empty.config(state="normal")
+                    self.btn_delete_image.config(state="normal")
 
                 except Exception as e:
                     print(e)

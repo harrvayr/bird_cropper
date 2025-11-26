@@ -6,4 +6,6 @@ class BirdSpecies(Enum):
     SPECIES_2 = "Punatulkku" # Bullfinch
     SPECIES_3 = "Sinitiainen" # Blue tit
     SPECIES_4 = "Varpunen"
+    SPECIES_5 = "Homotiainen"
+    SPECIES_6 = "Harakka"
     EMPTY = "Empty"
