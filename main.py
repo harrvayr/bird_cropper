@@ -9,7 +9,7 @@ class ImageCropper:
     def __init__(self, root):
         self.root = root
         self.root.title("Bird Cropper v9001")
-        self.root.geometry("1000x1000")
+        #self.root.geometry("1000x1000")
         self.radiobuttons_list = []
         
         # Control panel

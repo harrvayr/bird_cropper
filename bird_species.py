@@ -8,4 +8,5 @@ class BirdSpecies(Enum):
     SPECIES_4 = "Varpunen"
     SPECIES_5 = "Homotiainen"
     SPECIES_6 = "Harakka"
+    SPECIES_7 = "Viherpeippo"
     EMPTY = "Empty"
