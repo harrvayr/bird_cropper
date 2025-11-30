@@ -31,16 +31,11 @@ class ImageCropper:
             radiobtn.pack(side='left')
             self.radiobuttons_list.append(radiobtn)
       
-            
-            # self.radiobtn_bird_ = tk.Radiobutton(control_frame, text=v.value, variable=self.ext_var, 
-            #            value=v.value, bg="#f0f0f0").pack(side="left")
-
         # Original photos folder button    
         self.btn_select_image_folder = tk.Button(control_frame, text="Select bird image folder", 
                   command=self.load_image)
         self.btn_select_image_folder.pack(side="left", padx=20)
         
-
         # Delete image button
         self.btn_delete_image = tk.Button(control_frame, text="Delete image", command=self.delete_image, state="disabled")
         self.btn_delete_image.pack(side="left", padx=20)
@@ -54,11 +49,11 @@ class ImageCropper:
         self.btn_save_original.pack(side="left", padx=10)
 
         # Crop save button
-        self.btn_save = tk.Button(control_frame, text="Save Selection", command=self.save_crop, state="disabled", bg="lightblue")
+        self.btn_save = tk.Button(control_frame, text="Save Selection", command=self.save_crop, state="disabled")
         self.btn_save.pack(side="left")
         
         # Next image button
-        self.btn_next = tk.Button(control_frame, text="Next image", command=self.change_to_next)
+        self.btn_next = tk.Button(control_frame, text="Next image", command=self.change_to_next, state="disabled")
         self.btn_next.pack(side="left", padx=20)
 
 
@@ -129,7 +124,6 @@ class ImageCropper:
                     self.tk_image = ImageTk.PhotoImage(self.image_opened)
 
 
-                    
                     #self.root.geometry(f"{min(w, 1200)}x{min(h+50, 900)}")
                     
                     # Draw image on canvas
@@ -142,6 +136,7 @@ class ImageCropper:
                     self.btn_save_original.config(state="normal")
                     self.btn_save_empty.config(state="normal")
                     self.btn_delete_image.config(state="normal")
+                    self.btn_next.config(state="normal")
 
                 except Exception as e:
                     print(e)
@@ -244,6 +239,7 @@ class ImageCropper:
         
         try:
             self.image_opened.save(save_dir + "/" + os.path.basename(self.image_opened.filename))
+            print("Successfully saved image!")
             self.change_to_next()
         except Exception as e:
             print(f"Failed to save image: {e}")
@@ -254,16 +250,24 @@ class ImageCropper:
         if self.image_opened is None:
             return
         
-        os.remove(self.image_opened.filename)
-        self.image_opened = None
-        self.load_image()
+        try:
+            os.remove(self.image_opened.filename)
+            self.image_opened = None
+            print("Image deleted")
+            self.load_image()
+        except Exception as e:
+            print(f"Failed to delete image: {e}")
 
     # Moves current image into handled folder and changes to next image
     def change_to_next(self):
-        os.replace(self.image_opened.filename, self.get_unique_filename(self.handled_dir + "/" + os.path.basename(self.image_opened.filename)))
-        self.image_opened = None
-        self.load_image()
+        try:
+            os.replace(self.image_opened.filename, self.get_unique_filename(self.handled_dir + "/" + os.path.basename(self.image_opened.filename)))
+            self.image_opened = None
+            self.load_image()
+        except Exception as e:
+            print(f"Changing image failed: {e}")
 
+    # Creates unique filename.
     def get_unique_filename(self, filename):
         if not os.path.exists(filename):
             return filename
