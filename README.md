@@ -46,7 +46,10 @@ python main.py
 3. <b>Select species:</b>Select the correct bird species from the top menu or use number keys
 <p>
 
-4. <b>Save:</b> Press the save selection button to save the cropped image. When saving first image you must select the folder where the images will be saved.
+4. <b>Save:</b> Press the save selection button to save the cropped image. When saving first image you must select the folder where the images will be saved. 
+<p>
+
+5. <b>Repeat: </b> Select new area to crop or change to next image by pressing Next Image button or Left Shift
 
 ### Hotkeys
 
